@@ -1,8 +1,9 @@
 package com.alphadle.data.util
 
 import androidx.room.TypeConverter
-import com.alphadle.domain.model.GameData
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 internal class Converters {
     @TypeConverter
@@ -16,12 +17,12 @@ internal class Converters {
     }
 
     @TypeConverter
-    fun difficultyToString(value: GameData.Difficulty): String {
-        return value.name
+    fun stringListToString(value: List<String>): String {
+        return Json.encodeToString(value)
     }
 
     @TypeConverter
-    fun stringToDifficulty(value: String): GameData.Difficulty {
-        return enumValueOf<GameData.Difficulty>(value)
+    fun stringToStringList(value: String): List<String> {
+        return Json.decodeFromString(value)
     }
 }

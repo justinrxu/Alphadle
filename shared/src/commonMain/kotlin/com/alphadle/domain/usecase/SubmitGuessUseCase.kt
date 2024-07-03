@@ -1,27 +1,26 @@
 package com.alphadle.domain.usecase
 
 import co.touchlab.kermit.Logger
+import com.alphadle.data.entity.DailyGuesses
+import com.alphadle.domain.model.GameData
 import com.alphadle.domain.repository.interfaces.IDailyGuessesRepository
-import kotlinx.coroutines.flow.first
 
 internal class SubmitGuessUseCase(
-    private val dailyGuessesRepository: IDailyGuessesRepository
+    private val validateGuessUseCase: ValidateGuessUseCase,
+    private val dailyGuessesRepository: IDailyGuessesRepository,
 ) {
-    suspend operator fun invoke(guess: String) {
+    suspend operator fun invoke(guess: String, gameData: GameData) {
         Logger.i { "Submitting guess to local game data..." }
-        dailyGuessesRepository.getDailyGuesses().first().let { dailyGuesses ->
-            if (guess.length != dailyGuesses.answer.length) {
-                Logger.w { "Submitted guess is not the same length as answer!" }
+        validateGuessUseCase.invoke(guess, gameData)
+        dailyGuessesRepository.upsertDailyGuesses(
+            with(gameData) {
+                DailyGuesses(
+                    date = date,
+                    difficulty = difficulty.name,
+                    guesses = guesses + guess,
+                    answer = answer
+                )
             }
-            dailyGuessesRepository.updateDailyGuesses(
-                with(dailyGuesses) {
-                    copy(
-                        guesses = guesses + guess,
-                        answer = answer,
-                        date = date
-                    )
-                }
-            )
-        }
+        )
     }
 }

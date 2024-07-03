@@ -1,46 +1,31 @@
 package com.alphadle.domain.repository
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
+import com.alphadle.data.dao.DailyGuessesDao
 import com.alphadle.data.entity.DailyGuesses
 import com.alphadle.domain.repository.interfaces.IDailyGuessesRepository
-import com.alphadle.domain.util.currentGameDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 internal class DailyGuessesRepositoryImpl(
-    private val dataStore: DataStore<Preferences>
+    private val dailyGuessesDao: DailyGuessesDao
 ) : IDailyGuessesRepository {
-    private val guessesKey: Preferences.Key<String> = stringPreferencesKey("guesses")
+    override suspend fun getAllDailyGuesses(): List<DailyGuesses> {
+        return dailyGuessesDao.getAllDailyGuesses()
+    }
 
-    override fun getDailyGuesses(): Flow<DailyGuesses> {
-        val answer = getDailyWord()
-        val date = currentGameDate()
-
-        return dataStore.data.map { preferences ->
-            DailyGuesses(
-                guesses = preferences[guessesKey]?.let { Json.decodeFromString(it) } ?: emptyList(),
-                answer = answer,
-                date = date
-            )
+    override fun getDailyGuessesByDifficultyAsFlow(difficulty: String): Flow<DailyGuesses?> {
+        return dailyGuessesDao.getAllDailyGuessesAsFlow().map { allDailyGuesses ->
+            allDailyGuesses.find { dailyGuesses ->
+                dailyGuesses.difficulty == difficulty
+            }
         }
     }
 
-    override suspend fun updateDailyGuesses(dailyGuesses: DailyGuesses) {
-        dataStore.edit { settings ->
-            settings[guessesKey] = Json.encodeToString(dailyGuesses.guesses)
-        }
+    override suspend fun upsertDailyGuesses(dailyGuesses: DailyGuesses) {
+        dailyGuessesDao.upsertDailyGuesses(dailyGuesses)
     }
 
-    override suspend fun deleteDailyGuesses() {
-        dataStore.edit { settings ->
-            settings.minusAssign(guessesKey)
-        }
+    override suspend fun deleteAllDailyGuesses() {
+        dailyGuessesDao.deleteAllDailyGuesses()
     }
-
-    private fun getDailyWord(): String = "YIPPEE"
 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 internal class EndViewModel(
+    difficulty: GameData.Difficulty,
     private val getSavedGameDataUseCase: GetSavedGameDataUseCase,
     private val getAllWordStatsUseCase: GetAllWordStatsUseCase
 ) : ViewModel() {
@@ -30,7 +31,7 @@ internal class EndViewModel(
     init {
         viewModelScope.launch {
             _endUiState.value = EndUiState.Loaded(
-                savedGameData = getSavedGameDataUseCase.invoke().first(),
+                savedGameData = getSavedGameDataUseCase.invoke(difficulty).first(),
                 totalStats = getAllWordStatsUseCase.invoke()
             )
         }

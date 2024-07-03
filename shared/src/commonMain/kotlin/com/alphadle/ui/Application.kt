@@ -13,11 +13,18 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.alphadle.data.entity.DailyGuesses
+import com.alphadle.domain.model.GameData
 import com.alphadle.ui.screens.end.EndScreen
 import com.alphadle.ui.theme.AppTheme
 import com.alphadle.ui.screens.game.GameScreen
 import com.alphadle.ui.screens.start.TitleScreen
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.core.parameter.ParametersHolder
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 internal fun Application() {
     val navController = rememberNavController()
@@ -38,14 +45,36 @@ internal fun Application() {
             composable(
                 route = "/gameScreen",
                 enterTransition = { slideInVertically() + fadeIn() },
-                exitTransition = { slideOutVertically() + fadeOut() }
-            ) {
-                GameScreen(navController = navController)
+                exitTransition = { slideOutVertically() + fadeOut() },
+                arguments = listOf(
+                    navArgument("difficulty") {
+                        defaultValue = GameData.Difficulty.NORMAL.name
+                    }
+                )
+            ) { entry ->
+                val difficulty = GameData.Difficulty.valueOf(
+                    entry.arguments?.getString("difficulty")
+                        ?: GameData.Difficulty.NORMAL.name
+                )
+
+                GameScreen(
+                    navController = navController,
+                    gameViewModel = koinViewModel {
+                        ParametersHolder(mutableListOf(difficulty))
+                    }
+                )
             }
-            composable(
-                route = "/endScreen"
-            ) {
-                EndScreen(navController = navController)
+            composable(route = "/endScreen") { entry ->
+                val difficulty = GameData.Difficulty.valueOf(
+                entry.arguments?.getString("difficulty")
+                    ?: GameData.Difficulty.NORMAL.name
+                )
+                EndScreen(
+                    endViewModel = koinViewModel {
+                        ParametersHolder(mutableListOf(difficulty))
+                    },
+                    navController = navController
+                )
             }
         }
     }

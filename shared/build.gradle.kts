@@ -73,6 +73,11 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
+            // Ktor
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization)
+
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
@@ -89,6 +94,12 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.compose.lifecycle)
             implementation(libs.androidx.compose.runtime)
+
+            implementation(libs.ktor.client.okhttp)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
     }
 }

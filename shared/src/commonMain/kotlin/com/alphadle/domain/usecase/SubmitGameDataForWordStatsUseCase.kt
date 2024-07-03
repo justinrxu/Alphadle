@@ -8,11 +8,10 @@ import kotlinx.coroutines.flow.first
 
 internal class SubmitGameDataForWordStatsUseCase(
     private val wordStatsRepository: IWordStatsRepository,
-    private val getSavedGameDataUseCase: GetSavedGameDataUseCase
 ) {
-    suspend operator fun invoke() {
+    suspend operator fun invoke(gameData: GameData) {
         Logger.i { "Converting completed local game data to word stats..." }
-        with(getSavedGameDataUseCase.invoke().first()) {
+        with(gameData) {
             if (!completed) {
                 Logger.w { "Local game data is not complete!" }
                 TODO("Throw exception")
@@ -21,7 +20,7 @@ internal class SubmitGameDataForWordStatsUseCase(
             wordStatsRepository.upsertWordStats(
                 WordStats(
                     didWin = didWin,
-                    difficulty = difficulty,
+                    difficulty = difficulty.name,
                     attempts = guesses.size,
                     date = date
                 )

@@ -33,10 +33,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import kotlin.math.roundToInt
 
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 internal fun EndScreen(
-    endViewModel: EndViewModel = koinViewModel(),
+    endViewModel: EndViewModel,
     navController: NavController
 ) {
     val uiState: EndViewModel.EndUiState by endViewModel.endUiState.collectAsStateWithLifecycle()

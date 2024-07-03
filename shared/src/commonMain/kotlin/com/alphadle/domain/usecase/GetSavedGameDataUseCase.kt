@@ -9,14 +9,11 @@ import kotlinx.coroutines.flow.map
 internal class GetSavedGameDataUseCase(
     private val dailyGuessesRepository: IDailyGuessesRepository
 ) {
-    operator fun invoke(): Flow<GameData> {
+    operator fun invoke(difficulty: GameData.Difficulty): Flow<GameData> {
         Logger.i { "Loading saved game data..." }
-        return dailyGuessesRepository.getDailyGuesses().map { dailyGuesses ->
-            GameData(
-                guesses = dailyGuesses.guesses,
-                answer = dailyGuesses.answer,
-                date = dailyGuesses.date
-            )
-        }
+        return dailyGuessesRepository.getDailyGuessesByDifficultyAsFlow(difficulty.name)
+            .map { dailyGuesses ->
+                GameData.fromDailyGuesses(dailyGuesses ?: throw Exception())
+            }
     }
 }

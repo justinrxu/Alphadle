@@ -2,7 +2,6 @@ package com.alphadle.domain.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.alphadle.data.database.AppDatabase
 import com.alphadle.data.util.createDataStore
@@ -24,19 +23,14 @@ fun initApp() {
 
     val dataStoreModule = module {
         single<DataStore<Preferences>> {
-            createDataStore().apply {
-                kotlinx.coroutines.runBlocking {
-                    edit {
-                        it.clear()
-                    }
-                }
-            }
+            createDataStore()
         }
     }
 
     startKoin {
         modules(
             listOf(
+                httpClientModule,
                 viewModelsModule, useCasesViewModel, repositoriesModule,
                 databaseModule, dataStoreModule
             )

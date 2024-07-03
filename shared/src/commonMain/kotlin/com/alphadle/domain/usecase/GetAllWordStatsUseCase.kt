@@ -1,6 +1,7 @@
 package com.alphadle.domain.usecase
 
 import co.touchlab.kermit.Logger
+import com.alphadle.data.entity.DailyGuesses
 import com.alphadle.data.entity.WordStats
 import com.alphadle.domain.model.GameData
 import com.alphadle.domain.model.TotalStats
@@ -29,7 +30,7 @@ internal class GetAllWordStatsUseCase(
         val currentGameDate = currentGameDate()
         val dates = map { it.date }
 
-        var count = 1
+        var count = 0
         while (dates.contains(currentGameDate.minus(count, DateTimeUnit.DAY))) {
             count += 1
         }
@@ -40,7 +41,7 @@ internal class GetAllWordStatsUseCase(
     private fun List<WordStats>.getDistribution(): Map<GameData.Difficulty, List<Int>> {
         return GameData.Difficulty.entries.associateWith { difficulty ->
             (0..<difficulty.wordLength).map { i ->
-                filter { it.difficulty == difficulty }
+                filter { it.difficulty == difficulty.name }
                     .count { it.attempts == i + 1 }
             }
         }

@@ -3,13 +3,16 @@ package com.alphadle.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.alphadle.data.dao.DailyGuessesDao
 import com.alphadle.data.dao.WordStatsDao
+import com.alphadle.data.entity.DailyGuesses
 import com.alphadle.data.entity.WordStats
 import com.alphadle.data.util.Converters
 
-@Database(entities = [WordStats::class], version = 1)
+@Database(entities = [DailyGuesses::class, WordStats::class], version = 1)
 @TypeConverters(Converters::class)
 internal abstract class AppDatabase : RoomDatabase(), DB {
+    abstract fun getDailyGuessesDao(): DailyGuessesDao
     abstract fun getWordStatsDao(): WordStatsDao
 
     override fun clearAllTables() {

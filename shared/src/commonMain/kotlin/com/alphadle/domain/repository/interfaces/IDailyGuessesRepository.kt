@@ -4,9 +4,10 @@ import com.alphadle.data.entity.DailyGuesses
 import kotlinx.coroutines.flow.Flow
 
 internal interface IDailyGuessesRepository {
-    fun getDailyGuesses(): Flow<DailyGuesses>
+    suspend fun upsertDailyGuesses(dailyGuesses: DailyGuesses)
 
-    suspend fun updateDailyGuesses(dailyGuesses: DailyGuesses)
+    suspend fun getAllDailyGuesses(): List<DailyGuesses>
+    fun getDailyGuessesByDifficultyAsFlow(difficulty: String): Flow<DailyGuesses?>
 
-    suspend fun deleteDailyGuesses()
+    suspend fun deleteAllDailyGuesses()
 }

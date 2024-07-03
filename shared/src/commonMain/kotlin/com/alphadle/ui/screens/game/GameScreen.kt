@@ -31,12 +31,16 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +57,7 @@ import com.alphadle.ui.util.getScreenSizeInfo
 import com.alphadle.ui.util.higherColor
 import com.alphadle.ui.util.lowerColor
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -62,12 +67,20 @@ internal fun GameScreen(
     navController: NavController,
     gameViewModel: GameViewModel = koinViewModel()
 ) {
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     val (screenHeight, screenWidth) = getScreenSizeInfo()
 
     val gameData: GameData by gameViewModel.savedGameData.collectAsStateWithLifecycle()
 
     var currentGuess: String by remember { mutableStateOf("") }
     var animateCurrentGuess: Boolean by remember { mutableStateOf(false) }
+
+    val showError: (String?) -> Unit = {
+        it?.let { message ->
+            scope.launch { snackbarHostState.showSnackbar(message) }
+        }
+    }
 
     LaunchedEffect(gameData.completed) {
         if (gameData.completed && animateCurrentGuess) {
@@ -77,174 +90,194 @@ internal fun GameScreen(
         }
     }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.largeSpacing),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().padding(LocalDimensions.current.appPadding)
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        modifier = Modifier.fillMaxSize()
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.largeSpacing),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.largeSpacing),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize().padding(LocalDimensions.current.appPadding)
         ) {
-            IconButton(onClick = { navController.navigateUp()}) {
-                Icon(imageVector = Icons.AutoMirrored.Default.ExitToApp, contentDescription = null)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.largeSpacing),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)
+            ) {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Default.ExitToApp,
+                        contentDescription = null
+                    )
+                }
+                if (gameData.completed && !animateCurrentGuess) {
+                    IconButton(onClick = { navController.navigate("/endScreen") }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.List,
+                            contentDescription = null
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight(0.3f)
+                            .aspectRatio(1f)
+                            .background(correctColor)
+                    )
+                    Text(" - correct")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight(0.3f)
+                            .aspectRatio(1f)
+                            .background(higherColor)
+                    )
+                    Text(" - higher")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight(0.3f)
+                            .aspectRatio(1f)
+                            .background(lowerColor)
+                    )
+                    Text(" - lower")
+                }
             }
-            if (gameData.completed && !animateCurrentGuess) {
-                IconButton(onClick = { navController.navigate("/endScreen") }) {
-                    Icon(imageVector = Icons.AutoMirrored.Default.List, contentDescription = null)
+            Row {
+                Text(text = "Remaining Guesses: ")
+                AnimatedContent(
+                    targetState = gameData.remainingAttempts,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            (slideInVertically { height -> height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> -height } + fadeOut())
+                        } else {
+                            (slideInVertically { height -> -height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> height } + fadeOut())
+                        }.using(
+                            SizeTransform(clip = false)
+                        )
+                    }
+                ) {
+                    Text(text = "${gameData.remainingAttempts}")
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.spacing)) {
+                gameData.guesses.forEach { guess ->
+                    LetterBoxes(
+                        guess = guess,
+                        wordLength = gameData.difficulty.wordLength,
+                        modifier = { i ->
+                            Modifier.background(
+                                if (i >= guess.length) MaterialTheme.colorScheme.surfaceContainer
+                                else if (gameData.answer[i] > guess[i]) higherColor
+                                else if (gameData.answer[i] < guess[i]) lowerColor
+                                else correctColor
+                            )
+                        }
+                    )
+                }
+                if (!gameData.completed) {
+                    LetterBoxes(
+                        guess = currentGuess,
+                        wordLength = gameData.difficulty.wordLength,
+                        modifier = { i ->
+                            val animationDuration = 500L
+
+                            var shrinkAnimationState by remember { mutableStateOf(false) }
+                            var showAnswerColor by remember { mutableStateOf(false) }
+
+                            LaunchedEffect(animateCurrentGuess) {
+                                if (animateCurrentGuess) {
+                                    delay(i * animationDuration)
+                                    shrinkAnimationState = true
+                                    delay(animationDuration / 2)
+                                    showAnswerColor = true
+                                    shrinkAnimationState = false
+
+                                    if (i == gameData.answer.lastIndex) {
+                                        delay(animationDuration / 2)
+                                        gameViewModel.submitGuess(
+                                            guess = currentGuess,
+                                            onError = showError
+                                        )
+                                        if (
+                                            currentGuess != gameData.answer &&
+                                            gameData.remainingAttempts != 1
+                                        ) {
+                                            animateCurrentGuess = false
+                                        }
+                                        currentGuess = ""
+                                    }
+                                } else {
+                                    showAnswerColor = false
+                                }
+                            }
+
+                            val animatedHeight: Dp by animateDpAsState(
+                                targetValue = if (shrinkAnimationState) 0.dp else 60.dp,
+                                animationSpec = tween(
+                                    durationMillis = animationDuration.toInt() / 2
+                                )
+                            )
+
+                            Modifier
+                                .height(animatedHeight)
+                                .background(
+                                    if (i >= currentGuess.length || !showAnswerColor)
+                                        MaterialTheme.colorScheme.surfaceContainer
+                                    else if (gameData.answer[i] > currentGuess[i]) higherColor
+                                    else if (gameData.answer[i] < currentGuess[i]) lowerColor
+                                    else correctColor
+                                )
+                        }
+                    )
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight(0.3f)
-                        .aspectRatio(1f)
-                        .background(correctColor)
-                )
-                Text(" - correct")
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight(0.3f)
-                        .aspectRatio(1f)
-                        .background(higherColor)
-                )
-                Text(" - higher")
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight(0.3f)
-                        .aspectRatio(1f)
-                        .background(lowerColor)
-                )
-                Text(" - lower")
-            }
-        }
-        Row {
-            Text(text = "Remaining Guesses: ")
-            AnimatedContent(
-                targetState = gameData.remainingAttempts,
-                transitionSpec = {
-                    if (targetState > initialState) {
-                        (slideInVertically { height -> height } + fadeIn()).togetherWith(
-                            slideOutVertically { height -> -height } + fadeOut())
-                    } else {
-                        (slideInVertically { height -> -height } + fadeIn()).togetherWith(
-                            slideOutVertically { height -> height } + fadeOut())
-                    }.using(
-                        SizeTransform(clip = false)
-                    )
-                }
-            ) {
-                Text(text = "${gameData.remainingAttempts}")
-            }
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.spacing)) {
-            gameData.guesses.forEach { guess ->
-                LetterBoxes(
-                    guess = guess,
-                    answer = gameData.answer,
-                    modifier = { i ->
-                        Modifier.background(
-                            if (i >= guess.length) MaterialTheme.colorScheme.surfaceContainer
-                            else if (gameData.answer[i] > guess[i]) higherColor
-                            else if (gameData.answer[i] < guess[i]) lowerColor
-                            else correctColor
+            Keyboard(
+                onKeyPress = { key ->
+                    when (key) {
+                        "ENTER" -> gameViewModel.validateGuess(
+                            guess = currentGuess,
+                            onSuccess = { animateCurrentGuess = true },
+                            onError = showError
                         )
-                    }
-                )
-            }
-            if (!gameData.completed) {
-                LetterBoxes(
-                    guess = currentGuess,
-                    answer = gameData.answer,
-                    modifier = { i ->
-                        val animationDuration = 500L
 
-                        var shrinkAnimationState by remember { mutableStateOf(false) }
-                        var showAnswerColor by remember { mutableStateOf(false) }
-
-                        LaunchedEffect(animateCurrentGuess) {
-                            if (animateCurrentGuess) {
-                                delay(i * animationDuration)
-                                shrinkAnimationState = true
-                                delay(animationDuration / 2)
-                                showAnswerColor = true
-                                shrinkAnimationState = false
-
-                                if (i == gameData.answer.lastIndex) {
-                                    delay(animationDuration / 2)
-                                    gameViewModel.submitGuess(currentGuess)
-                                    if (
-                                        currentGuess != gameData.answer &&
-                                        gameData.remainingAttempts != 1
-                                    ) {
-                                        animateCurrentGuess = false
-                                    }
-                                    currentGuess = ""
-                                }
-                            } else {
-                                showAnswerColor = false
-                            }
+                        "DEL" -> if (currentGuess.isNotEmpty()) {
+                            currentGuess = currentGuess.substring(0, currentGuess.length - 1)
                         }
 
-                        val animatedHeight: Dp by animateDpAsState(
-                            targetValue = if (shrinkAnimationState) 0.dp else 60.dp,
-                            animationSpec = tween(durationMillis = animationDuration.toInt() / 2)
-                        )
-
-                        Modifier
-                            .height(animatedHeight)
-                            .background(
-                                if (i >= currentGuess.length || !showAnswerColor)
-                                    MaterialTheme.colorScheme.surfaceContainer
-                                else if (gameData.answer[i] > currentGuess[i]) higherColor
-                                else if (gameData.answer[i] < currentGuess[i]) lowerColor
-                                else correctColor
-                            )
+                        else -> if (currentGuess.length < gameData.difficulty.wordLength) {
+                            currentGuess += key
+                        }
                     }
-                )
-            }
+                },
+                keyWidth = min(
+                    (screenWidth - LocalDimensions.current.appPadding.times(2)).div(11),
+                    48.dp
+                ),
+                enabled = !animateCurrentGuess && !gameData.completed
+            )
         }
-        Spacer(modifier = Modifier.weight(1f))
-        Keyboard(
-            onKeyPress = { key ->
-                when (key) {
-                    "ENTER" -> if (currentGuess.length == gameData.answer.length) {
-                        animateCurrentGuess = true
-                    }
-                    "DEL" -> if (currentGuess.isNotEmpty()) {
-                        currentGuess = currentGuess.substring(0, currentGuess.length - 1)
-                    }
-                    else -> if (currentGuess.length < gameData.answer.length) {
-                        currentGuess += key
-                    }
-                }
-            },
-            keyWidth = min(
-                (screenWidth - LocalDimensions.current.appPadding.times(2)).div(11),
-                48.dp
-            ),
-            enabled = !animateCurrentGuess && !gameData.completed
-        )
     }
 }
 
 @Composable
 private fun LetterBoxes(
     guess: String,
-    answer: String,
+    wordLength: Int,
     modifier: @Composable (Int) -> Modifier
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.spacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        repeat(answer.length) { i ->
+        repeat(wordLength) { i ->
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = modifier(i).size(60.dp)
