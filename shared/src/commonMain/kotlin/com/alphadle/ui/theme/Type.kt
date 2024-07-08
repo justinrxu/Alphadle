@@ -10,17 +10,20 @@ internal val typography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 48.sp
     ),
+    displayMedium = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 32.sp
+    ),
     titleLarge = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 28.sp
-    ),
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 18.sp
+        fontSize = 24.sp
     ),
     titleSmall = TextStyle(
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp
-    )
+    ),
+    bodyMedium = TextStyle(fontSize = 18.sp),
+    bodySmall = TextStyle(fontSize = 14.sp),
+    labelSmall = TextStyle(fontSize = 10.sp)
 )
 

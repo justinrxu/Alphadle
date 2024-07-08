@@ -6,12 +6,16 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.alphadle.domain.model.GameData
 import com.alphadle.domain.repository.interfaces.IWordListRepository
+import com.alphadle.domain.util.currentGameDate
+import com.alphadle.domain.util.wordsEpochDate
+import com.alphadle.domain.util.normalWordList
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.minus
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -65,5 +69,8 @@ internal class WordListRepositoryImpl(
         return jsonObject?.containsKey("word") == true
     }
 
-    private fun retrieveDailyWords() = listOf("YIPPEE")
+    private fun retrieveDailyWords(): List<String> {
+        val offset = currentGameDate().minus(wordsEpochDate).days
+        return listOf(normalWordList[offset])
+    }
 }

@@ -2,15 +2,18 @@ import SwiftUI
 import shared
 
 struct ContentView: View {
-	let greet = Greeting().greet()
-
-	var body: some View {
-		Text(greet)
-	}
-}
-
-struct ContentView_Previews: PreviewProvider {
-	static var previews: some View {
-		ContentView()
-	}
+    private struct ComposeView: UIViewControllerRepresentable {
+        func makeUIViewController(context: Context) -> UIViewController {
+            return ApplicationControllerKt.ApplicationController()
+        }
+        
+        func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    }
+    
+    var body: some View {
+        ComposeView()
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .edgesIgnoringSafeArea(.all)
+            .ignoresSafeArea(.keyboard)
+    }
 }

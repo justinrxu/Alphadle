@@ -14,7 +14,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.alphadle.data.entity.DailyGuesses
 import com.alphadle.domain.model.GameData
 import com.alphadle.ui.screens.end.EndScreen
 import com.alphadle.ui.theme.AppTheme
@@ -40,7 +39,10 @@ internal fun Application() {
                 enterTransition = { slideInVertically() + fadeIn() },
                 exitTransition = { slideOutVertically() + fadeOut() }
             ) {
-                TitleScreen(navController = navController)
+                TitleScreen(
+                    titleViewModel = koinViewModel(),
+                    navController = navController
+                )
             }
             composable(
                 route = "/gameScreen",

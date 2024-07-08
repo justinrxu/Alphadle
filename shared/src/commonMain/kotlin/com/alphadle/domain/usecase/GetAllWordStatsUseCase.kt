@@ -40,7 +40,7 @@ internal class GetAllWordStatsUseCase(
 
     private fun List<WordStats>.getDistribution(): Map<GameData.Difficulty, List<Int>> {
         return GameData.Difficulty.entries.associateWith { difficulty ->
-            (0..<difficulty.wordLength).map { i ->
+            (0..<difficulty.attempts).map { i ->
                 filter { it.difficulty == difficulty.name }
                     .count { it.attempts == i + 1 }
             }

@@ -17,16 +17,9 @@ internal data class GameData(
             date = dailyGuesses.date,
             difficulty = Difficulty.valueOf(dailyGuesses.difficulty)
         )
-
-        fun GameData.toDailyGuesses() = DailyGuesses(
-            guesses = guesses,
-            answer = answer,
-            date = date,
-            difficulty = difficulty.name
-        )
     }
     enum class Difficulty(val wordLength: Int, val attempts: Int) {
-        NORMAL(6, 6)
+        NORMAL(5, 7)
     }
 
     val attempts: Int

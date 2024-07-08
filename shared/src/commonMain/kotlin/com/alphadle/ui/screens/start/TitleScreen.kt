@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,14 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.alphadle.ui.theme.LocalDimensions
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
+import com.alphadle.ui.util.stringDate
 
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 internal fun TitleScreen(
     navController: NavController,
-    titleViewModel: TitleViewModel = koinViewModel()
+    titleViewModel: TitleViewModel
 ) {
     LaunchedEffect(true) {
         titleViewModel.checkDailyReset()
@@ -31,12 +30,17 @@ internal fun TitleScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.spacing),
+            verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.largeSpacing),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "Alphadle", style = MaterialTheme.typography.displayLarge)
+            Text(
+                text = titleViewModel.date.stringDate(),
+                style = MaterialTheme.typography.bodyMedium
+            )
             Button(
-                onClick = { navController.navigate("/gameScreen") }
+                onClick = { navController.navigate("/gameScreen") },
+                modifier = Modifier.padding(horizontal = LocalDimensions.current.largePadding)
             ) {
                 Text(text = "Play", style = MaterialTheme.typography.labelMedium)
             }

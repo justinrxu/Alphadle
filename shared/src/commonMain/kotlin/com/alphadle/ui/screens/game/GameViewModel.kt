@@ -11,6 +11,7 @@ import com.alphadle.domain.usecase.SubmitGameDataForWordStatsUseCase
 import com.alphadle.domain.usecase.ValidateGuessUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -55,13 +56,25 @@ internal class GameViewModel(
 
     fun submitGuess(
         guess: String,
+        onSuccess: () -> Unit,
         onError: (String?) -> Unit
     ) {
         viewModelScope.launch {
             try {
                 submitGuessUseCase.invoke(guess, savedGameData.value)
+                onSuccess()
             } catch (e: InvalidGuessException) {
                 onError(e.message)
+            }
+        }
+    }
+
+    fun submitGameData() {
+        with(savedGameData.value) {
+            if (completed) {
+                viewModelScope.launch {
+                    submitGameDataForWordStatsUseCase.invoke(this@with)
+                }
             }
         }
     }
