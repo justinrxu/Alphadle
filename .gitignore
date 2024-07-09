@@ -2,13 +2,15 @@
 .gradle
 .idea
 .DS_Store
-build
-captures
-.externalNativeBuild
-.cxx
+.kotlin
 local.properties
-xcuserdata
+gradle.properties
 
 **/build/
-gradle.properties
+
+## Xcode
+xcuserdata/
 ios.xcworkspace/
+*.ipa
+*.dSYM.zip
+*.dSYM

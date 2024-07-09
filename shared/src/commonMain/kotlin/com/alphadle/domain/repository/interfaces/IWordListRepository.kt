@@ -6,4 +6,6 @@ internal interface IWordListRepository {
     suspend fun getDailyWords(): Map<GameData.Difficulty, String>
 
     suspend fun isInWordList(guess: String): Boolean
+
+    suspend fun deleteDailyWords()
 }

@@ -20,12 +20,14 @@ fun initApp() {
                 .setDriver(BundledSQLiteDriver())
                 .setQueryCoroutineContext(Dispatchers.IO)
                 .build()
+//                .apply { runBlocking { getDailyGuessesDao().deleteAllDailyGuesses() } }
         }
     }
 
     val dataStoreModule = module {
         single<DataStore<Preferences>> {
             createDataStore()
+//                .apply { runBlocking { edit { it.clear() } } }
         }
     }
 

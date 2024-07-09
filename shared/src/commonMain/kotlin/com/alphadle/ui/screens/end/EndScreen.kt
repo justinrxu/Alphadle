@@ -173,21 +173,24 @@ private fun FrequencyGraph(
             ) {
                 Text(text = "$tries", style = MaterialTheme.typography.titleSmall)
                 Spacer(modifier = Modifier.width(LocalDimensions.current.spacing))
-                if (frequency > 0) {
-                    Box(
-                        contentAlignment = Alignment.CenterEnd,
-                        modifier = Modifier
-                            .fillMaxWidth(frequency.toFloat() / totalWins)
-                            .background(
-                                if (tries == currentTries)
-                                    MaterialTheme.colorScheme.primaryContainer
-                                else
-                                    MaterialTheme.colorScheme.surfaceContainer
-                            )
-                            .padding(LocalDimensions.current.padding)
-                    ) {
-                        Text(text = "$frequency", style = MaterialTheme.typography.labelSmall)
-                    }
+                Box(
+                    contentAlignment = Alignment.CenterEnd,
+                    modifier = Modifier
+                        .fillMaxWidth(frequency.toFloat() / totalWins)
+                        .background(
+                            if (tries == currentTries)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceContainer
+                        )
+                        .padding(LocalDimensions.current.padding)
+                ) {
+                    Text(
+                        text =
+                            if (frequency > 0) "$frequency"
+                            else "",
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
         }

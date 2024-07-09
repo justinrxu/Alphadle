@@ -69,6 +69,12 @@ internal class WordListRepositoryImpl(
         return jsonObject?.containsKey("word") == true
     }
 
+    override suspend fun deleteDailyWords() {
+        dataStore.edit { preferences ->
+            preferences.remove(stringPreferencesKey(DAILY_WORDS_KEY))
+        }
+    }
+
     private fun retrieveDailyWords(): List<String> {
         val offset = currentGameDate().minus(wordsEpochDate).days
         return listOf(normalWordList[offset])

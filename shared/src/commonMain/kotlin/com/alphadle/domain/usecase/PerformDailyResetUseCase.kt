@@ -19,6 +19,7 @@ internal class PerformDailyResetUseCase(
         if (dailyGuessesRepository.getAllDailyGuesses().all { it.date != date }) {
             Logger.i { "Retrieving new words for today..." }
             dailyGuessesRepository.deleteAllDailyGuesses()
+            wordListRepository.deleteDailyWords()
             wordListRepository.getDailyWords()
                 .also { wordMap ->
                     Logger.i { "Today's words are ${wordMap.values}" }

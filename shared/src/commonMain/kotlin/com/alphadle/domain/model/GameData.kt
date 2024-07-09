@@ -10,14 +10,6 @@ internal data class GameData(
     val date: LocalDate,
     val difficulty: Difficulty
 ) {
-    companion object {
-        fun fromDailyGuesses(dailyGuesses: DailyGuesses) = GameData(
-            guesses = dailyGuesses.guesses,
-            answer = dailyGuesses.answer,
-            date = dailyGuesses.date,
-            difficulty = Difficulty.valueOf(dailyGuesses.difficulty)
-        )
-    }
     enum class Difficulty(val wordLength: Int, val attempts: Int) {
         NORMAL(5, 7)
     }
